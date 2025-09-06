@@ -81,7 +81,8 @@ const styles: { [key: string]: React.CSSProperties } = {
 
 export const AIChat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
-    { text: "Hello! How can I assist you today?", sender: 'ai' }
+    { text: "Hello, Doctor. I have a problem", sender: 'ai' },
+    { text: "Hello! How can I help you today?", sender: 'user' },
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);

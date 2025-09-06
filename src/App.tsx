@@ -25,7 +25,7 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="bg-gray-800 text-white p-4 flex-shrink-0">
-        <h1 className="text-xl">Berlin-doc</h1>
+        <h1 className="text-xl">CliniTrain</h1>
       </header>
       <main className="flex-grow flex flex-col items-center p-4 space-y-4">
         <ImageWithPreloader height={500} src={mainImageSrc ? mainImageSrc : ''} alt="desc" loaderSize={40} />
