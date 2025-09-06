@@ -25,7 +25,7 @@ export const useConversationStore = create<ConversationState>((set) => ({
 
   fetchPosts: async (params: { conversation: string, action: string }) => {
     console.log('fetchPosts: Function entered with params:', params); // Добавлено для отладки
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, mainImageSrc: null });
     try {
       const baseUrl = import.meta.env.VITE_N8N_DOMAIN;
       console.log('fetchPosts: VITE_N8N_DOMAIN:', baseUrl); // Добавлено для отладки
@@ -35,7 +35,7 @@ export const useConversationStore = create<ConversationState>((set) => ({
       }
 
       const url = `${baseUrl}/webhook/do_action`;
-      console.log('fetchPosts: Fetching URL:', url); // Добавлено для отладки
+      console.log('fetchPosts: Fetching URL:', url);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -48,11 +48,13 @@ export const useConversationStore = create<ConversationState>((set) => ({
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      console.log('Response:', response);
-      set({ isLoading: false });
+
+      const responseData = await response.json();
+      console.log('Response:', responseData);
+      set({ isLoading: false, mainImageSrc: responseData?.result?.sample });
     }
     catch (error: any) {
-      console.error('fetchPosts: Error during fetch:', error); // Добавлено для отладки
+      console.error('fetchPosts: Error during fetch:', error);
       set({ error: error?.message || 'An unknown error occurred', isLoading: false });
     }
   }

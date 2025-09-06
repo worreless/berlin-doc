@@ -36,7 +36,7 @@ export const useDiagnosisStore = create<DiagnosisState>((set) => ({
             set({ isLoading: false, diagnosisResponse: await response.text() } );
         }
         catch (error: any) {
-            console.error('fetchPosts: Error during fetch:', error); // Добавлено для отладки
+            console.error('fetchPosts: Error during fetch:', error);
             set({ error: error?.message || 'An unknown error occurred', isLoading: false });
         }
     },

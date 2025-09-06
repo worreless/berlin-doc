@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ImageWithPreloader } from './components/ImageWithPreloader';
 import { AIChat } from './components/AIChat';
 import BodyMap from './components/BodyMap';
@@ -8,8 +8,9 @@ import DiagnosisSubmission from './components/DiagnosisSubmission';
 import { useDiagnosisStore } from './store/useDiagnosisStore';
 
 function App() {
-  const { fetchPosts } = useConversationStore();
+  const { mainImageSrc, fetchPosts } = useConversationStore();
   const { submitDiagnosis } = useDiagnosisStore();
+//   const [imageURL, setImageURL] = useState('');
 
   const performTest = async (action: string) => {
     fetchPosts({ conversation: 'Hello', action });
@@ -21,7 +22,7 @@ function App() {
   }, [fetchPosts]);
   return (
     <>
-      <ImageWithPreloader height={500} src="https://www.ai-imagelab.de/wp-content/uploads/2024/08/flux-bfl.jpeg" alt="desc" loaderSize={40} />
+      <ImageWithPreloader src={mainImageSrc ? mainImageSrc : ''} height={500} alt="desc" loaderSize={40} />
       <AIChat />
       <BodyMap 
         onSelectBodyPart={performTest}

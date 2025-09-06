@@ -8,7 +8,7 @@ interface BodyPartProps {
 
 interface BodyMapProps {
     onSelectBodyPart: (action: string) => void;
-  }
+}
 
 interface BodyPartActions {
   [key: string]: string[];
@@ -52,7 +52,7 @@ const BodyMap = ({ onSelectBodyPart }: BodyMapProps) => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 font-sans">
       <div className="bg-white rounded-xl shadow-2xl p-8 max-w-lg w-full text-center">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-6">
-          Body Part Selector
+            Body Part Selector
         </h1>
 
         {!selectedPart && (
@@ -111,13 +111,16 @@ const BodyMap = ({ onSelectBodyPart }: BodyMapProps) => {
         {selectedPart && (
           <div className="flex flex-wrap justify-center gap-2">
             {bodypartActions[selectedPart]?.map((action, index) => (
-              <button
-                key={index}
-                onClick={() => onSelectBodyPart(action)}
-                className="px-4 py-2 bg-green-500 text-white font-bold rounded-full shadow-lg hover:bg-green-600 transition-colors duration-300 text-sm"
-              >
-                {action}
-              </button>
+                <button
+                    key={index}
+                    onClick={() => {
+                        onSelectBodyPart(action)
+                        setSelectedPart(null)
+                    }}
+                    className="px-4 py-2 bg-green-500 text-white font-bold rounded-full shadow-lg hover:bg-green-600 transition-colors duration-300 text-sm"
+                >
+                    {action}
+                </button>
             ))}
             <button
               onClick={() => {
