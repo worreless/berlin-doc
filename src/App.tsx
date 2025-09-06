@@ -8,6 +8,10 @@ import { useConversationStore } from './store/useConversationStore';
 function App() {
   const { fetchPosts } = useConversationStore();
 
+  const performTest = async (action: string) => {
+    fetchPosts({ conversation: 'Hello', action });
+  }
+
   useEffect(() => {
     console.log('App useEffect: Calling fetchPosts'); // Added for debugging
     fetchPosts({ conversation: 'Hello', action: 'start' });
@@ -16,7 +20,9 @@ function App() {
     <>
       <ImageWithPreloader height={500} src="https://www.ai-imagelab.de/wp-content/uploads/2024/08/flux-bfl.jpeg" alt="desc" loaderSize={40} />
       <AIChat />
-      <BodyMap />
+      <BodyMap 
+        onSelectBodyPart={performTest}
+      />
     </>
   )
 }

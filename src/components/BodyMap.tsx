@@ -6,24 +6,29 @@ interface BodyPartProps {
   isSelected: boolean;
 }
 
+interface BodyMapProps {
+    onSelectBodyPart: (action: string) => void;
+  }
+
 interface BodyPartActions {
   [key: string]: string[];
 }
 
 const bodypartActions: BodyPartActions = {
   'Torso': [
-    'Chest X-Ray',
+    'Perform an X-ray',
     'CT Scan of the Chest',
-    'Sputum Culture'
+    'Collect a sputum culture'
   ],
   'Head': [
-    'Swab',
-    'Lymph Node Examination',
-    'Visual Inspection'
+    'Order a CT scan of the head',
+    'Swab the nasal passages',
+    'Examine the lymph nodes',
+    'Perform visual inspection'
   ],
 };
 
-const BodyMap = () => {
+const BodyMap = ({ onSelectBodyPart }: BodyMapProps) => {
   const [selectedPart, setSelectedPart] = useState<string | null>(null);
 
   const handlePartClick = (partName: string) => {
@@ -108,6 +113,7 @@ const BodyMap = () => {
             {bodypartActions[selectedPart]?.map((action, index) => (
               <button
                 key={index}
+                onClick={() => onSelectBodyPart(action)}
                 className="px-4 py-2 bg-green-500 text-white font-bold rounded-full shadow-lg hover:bg-green-600 transition-colors duration-300 text-sm"
               >
                 {action}
