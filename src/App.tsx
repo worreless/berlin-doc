@@ -4,9 +4,12 @@ import { AIChat } from './components/AIChat';
 import BodyMap from './components/BodyMap';
 import './App.css'
 import { useConversationStore } from './store/useConversationStore';
+import DiagnosisSubmission from './components/DiagnosisSubmission';
+import { useDiagnosisStore } from './store/useDiagnosisStore';
 
 function App() {
   const { fetchPosts } = useConversationStore();
+  const { submitDiagnosis } = useDiagnosisStore();
 
   const performTest = async (action: string) => {
     fetchPosts({ conversation: 'Hello', action });
@@ -22,6 +25,9 @@ function App() {
       <AIChat />
       <BodyMap 
         onSelectBodyPart={performTest}
+      />
+      <DiagnosisSubmission 
+        onDiagnosisSubmit={submitDiagnosis}
       />
     </>
   )
