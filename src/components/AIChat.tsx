@@ -9,7 +9,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   chatContainer: {
     fontFamily: 'sans-serif',
     width: '100%',
-    maxWidth: '600px',
+    maxWidth: '750px',
     margin: '20px auto',
     border: '1px solid #ccc',
     borderRadius: '8px',

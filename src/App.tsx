@@ -19,17 +19,27 @@ function App() {
     console.log('App useEffect: Calling fetchPosts'); // Added for debugging
     fetchPosts({ conversation: 'Hello', action: 'start' });
   }, [fetchPosts]);
+
   return (
-    <>
-      <ImageWithPreloader height={500} src="https://www.ai-imagelab.de/wp-content/uploads/2024/08/flux-bfl.jpeg" alt="desc" loaderSize={40} />
-      <AIChat />
-      <BodyMap 
-        onSelectBodyPart={performTest}
-      />
-      <DiagnosisSubmission 
-        onDiagnosisSubmit={submitDiagnosis}
-      />
-    </>
+    <div className="flex flex-col min-h-screen">
+      <header className="bg-gray-800 text-white p-4 flex-shrink-0">
+        <h1 className="text-xl">Berlin-doc</h1>
+      </header>
+      <main className="flex-grow flex flex-col items-center p-4 space-y-4">
+        <ImageWithPreloader height={500} src="https://www.ai-imagelab.de/wp-content/uploads/2024/08/flux-bfl.jpeg" alt="desc" loaderSize={40} />
+        <div className="w-full max-w-4xl">
+          <AIChat />
+        </div>
+        <div className="w-full max-w-4xl">
+          <BodyMap 
+            onSelectBodyPart={performTest}
+          />
+          <DiagnosisSubmission 
+            onDiagnosisSubmit={submitDiagnosis}
+          />
+        </div>
+      </main>
+    </div>
   )
 }
 
