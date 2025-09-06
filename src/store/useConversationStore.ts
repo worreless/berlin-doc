@@ -34,18 +34,24 @@ export const useConversationStore = create<ConversationState>((set) => ({
         throw new Error("VITE_N8N_DOMAIN is not defined in your .env file or does not start with VITE_.");
       }
 
-      const queryParams = new URLSearchParams(params).toString();
-      const url = `${baseUrl}/webhook-test/do_action?${queryParams}`;
+      const url = `${baseUrl}/webhook/do_action`;
       console.log('fetchPosts: Fetching URL:', url); // Добавлено для отладки
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(params),
+      });
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       console.log('Response:', response);
       set({ isLoading: false });
     }
-    catch ( error: any) {
+    catch (error: any) {
       console.error('fetchPosts: Error during fetch:', error); // Добавлено для отладки
       set({ error: error?.message || 'An unknown error occurred', isLoading: false });
     }
