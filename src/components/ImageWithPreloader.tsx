@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useConversationStore } from '../store/useConversationStore';
 
 type ImageWithPreloaderProps = React.ImgHTMLAttributes<HTMLImageElement> & {
     loaderSize?: number;
@@ -25,12 +26,12 @@ export const ImageWithPreloader: React.FC<ImageWithPreloaderProps> = ({
     loaderSize = 32,
     ...imgProps
 }) => {
-    const [loading, setLoading] = useState(true);
+    const {isLoading } = useConversationStore();
 
     return (
-        <div style={{ position: 'relative', display: 'inline-block' }}>
+        <div style={{ height: '500px', position: 'relative', display: 'inline-block' }}>
             <style>{spinnerKeyframes}</style>
-            {loading && (
+            {(isLoading) && (
                 <div style={{
                     position: 'absolute',
                     top: '50%',
@@ -41,19 +42,20 @@ export const ImageWithPreloader: React.FC<ImageWithPreloaderProps> = ({
                     <div style={spinnerStyle(loaderSize)} />
                 </div>
             )}
-            <img
-                {...imgProps}
-                style={{
-                    opacity: loading ? 0 : 1,
-                    transition: 'opacity 0.3s',
-                    display: 'block',
-                    ...imgProps.style,
-                }}
-                onLoad={(e) => {
-                    setLoading(false);
-                    imgProps.onLoad?.(e);
-                }}
-            />
+            {imgProps.src && (
+                <img
+                    {...imgProps}
+                    style={{
+                        opacity: isLoading ? 0 : 1,
+                        transition: 'opacity 0.3s',
+                        display: 'block',
+                        ...imgProps.style,
+                    }}
+                    onLoad={(e) => {
+                        imgProps.onLoad?.(e);
+                    }}
+                />
+            )}
         </div>
     );
 };

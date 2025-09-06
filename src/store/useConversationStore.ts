@@ -51,7 +51,7 @@ export const useConversationStore = create<ConversationState>((set) => ({
 
       const responseData = await response.json();
       console.log('Response:', responseData);
-      set({ isLoading: false, mainImageSrc: responseData?.result?.sample });
+      set({ isLoading: false, mainImageSrc: responseData?.url });
     }
     catch (error: any) {
       console.error('fetchPosts: Error during fetch:', error);

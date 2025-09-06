@@ -13,6 +13,7 @@ function App() {
 //   const [imageURL, setImageURL] = useState('');
 
   const performTest = async (action: string) => {
+    console.log('action', action);
     fetchPosts({ conversation: 'Hello', action });
   }
 

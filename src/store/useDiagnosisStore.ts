@@ -21,6 +21,7 @@ export const useDiagnosisStore = create<DiagnosisState>((set) => ({
                 throw new Error("VITE_N8N_DOMAIN is not defined in your .env file or does not start with VITE_.");
             }
 
+            console.log('diagnosis 10', diagnosis);
             const url = `${baseUrl}/diagnosis?diagnosis=${encodeURIComponent(diagnosis)}`;
             console.log('fetchDiagnosis: Fetching URL:', url);
 
