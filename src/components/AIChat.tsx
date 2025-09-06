@@ -15,7 +15,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: '8px',
     display: 'flex',
     flexDirection: 'column',
-    height: '70vh',
+    height: '40vh',
     backgroundColor: '#f9f9f9',
     boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
   },
