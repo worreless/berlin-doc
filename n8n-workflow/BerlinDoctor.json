@@ -1,0 +1,1233 @@
+{
+  "name": "BerlinDoctor",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1aO9hYmPO8v_nQjwbWZRji0ocPMgGY4D52KGAWJ370lI",
+          "mode": "list",
+          "cachedResultName": "BerlinDoctor Diseases",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1aO9hYmPO8v_nQjwbWZRji0ocPMgGY4D52KGAWJ370lI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1aO9hYmPO8v_nQjwbWZRji0ocPMgGY4D52KGAWJ370lI/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1440,
+        640
+      ],
+      "id": "d0248e08-fcfe-4387-85d6-ca98c5b52bc1",
+      "name": "get rows",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lvPknGOR7RVYBZv5",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all items from the previous node\nconst items = $('get rows').all();\n// Select a random item\nconst randomIndex = Math.floor(Math.random() * items.length);\nconst disease = items[randomIndex].json[\"Disease \"]?.trim();\nreturn [{ json: { disease } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1232,
+        640
+      ],
+      "id": "ec16e9a8-2f2e-4c7e-ad37-a4753ecd1984",
+      "name": "get_random_disease"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a clinical explainer. Keep language plain and visual. No treatment advice. No diagnosis.  \nGiven the DISEASE below, return symptoms and signs that are easy to see or recognize, focusing on appearance, exam clues, and typical imaging (X-ray/CT/MRI) patterns. Keep it concise and beginner-friendly.\n\nOutput format (use these exact section headers):\n1) At-a-glance appearance (patient)  \n- 2–3 short bullets. Plain words. What someone might notice looking at the patient (skin, breathing effort, posture, swelling, color changes, rashes, deformities, gait, facial clues).  \n2) On physical exam (what a clinician sees/hears)  \n- 2–3 short bullets. Inspection, palpation, percussion, auscultation. Use simple parenthetical hints (e.g., “dull sound when tapping”).  \n3) Imaging snapshots  \n- 2–3 bullets. Name the modality first (e.g., **X-ray:** …, **CT:** …, **MRI:** …). Use classic, high-yield descriptors; keep each bullet one line.  \n4) Common visuals that mimic it  \n- 2–3 bullets. Very brief how-to tell apart (1 short clause).  \n5) Red-flag visuals (seek urgent care)  \n- 1–2 bullets. Only visual/exam red flags (no labs, no treatment).\n\nStyle rules:  \n- Max 10 words per bullet; no paragraphs.  \n- Avoid jargon; add tiny clarifiers in parentheses when helpful.  \n- No probabilities, no management steps, no labs unless visually evident (e.g., “jaundice”).  \n- Do not make or imply a diagnosis.  \n\n\nDISEASE: {{ $json.disease }}\n\nReturn a txt output",
+              "role": "assistant"
+            },
+            {}
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -1024,
+        640
+      ],
+      "id": "aea1a9a0-7b32-4e19-9b8a-a6d04d8d790c",
+      "name": "generate symptoms",
+      "alwaysOutputData": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "NzxKiLIUR46RJIup",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "hack-doctor-fr",
+        "fileName": "symptoms.txt",
+        "binaryData": false,
+        "fileContent": "={{ JSON.stringify($json.message.content) }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        624
+      ],
+      "id": "aeffc3d5-e9e3-4369-928f-9120860eec09",
+      "name": "save the symptoms",
+      "credentials": {
+        "aws": {
+          "id": "7LW7L7lJGb9RjDIN",
+          "name": "AWS account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a prompt generator for Black Forest Labs’ FLUX text-to-image model.  \nYour job: given a disease and a list of symptoms, write a single, well-structured, natural-sounding prompt that will produce a **photorealistic image** of a patient sitting in front of a doctor in a clinical setting.\n\nConstraints:\n- The patient must realistically show **all the listed symptoms**:{{ $json.message.content }}\n- Keep the rendering subtle and believable, not exaggerated or cartoonish.\n- The scene should clearly suggest a doctor-patient encounter, but the focus is the patient’s appearance.\n- Include context (doctor’s office, clinical lighting, examination chair).\n- Style: realistic clinical photography, neutral colors, natural lighting.\n- Length: medium (30–80 words).\n- Do not include medical advice, labels, or text in the image.\n\nFollow this structure: **Subject + Action + Style + Context**.\n\nDISEASE:  {{ $('get_random_disease').item.json.disease }} \nSYMPTOMS: {{ $json.message.content }}\nNow write one complete prompt to feed directly into Black Forest Labs FLUX."
+            },
+            {
+              "content": "="
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -576,
+        832
+      ],
+      "id": "a7cef761-b923-4744-b76f-3653fc38115f",
+      "name": "generate initial image prompt",
+      "credentials": {
+        "openAiApi": {
+          "id": "NzxKiLIUR46RJIup",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are roleplaying as the **patient** in a doctor’s office.  \nYou do **not** know your condition or diagnosis.  \nYou should only describe how you feel, in your own words, based on the given symptoms: {{ $json.message.content }}.  \n\nGuidelines:\n- Speak naturally, like a person talking to their doctor.  \n- Do not list symptoms mechanically; weave them into natural complaints.  \n- Do not mention or guess any disease name.  \n- Use everyday language (e.g., “I’ve been really tired lately” instead of “I have fatigue”).  \n- Be realistic and conversational, not exaggerated.  \n- Only write the **first message from the patient** to start the conversation.  \n- Keep it short: 3–5 sentences.  \n- Do not write the doctor’s response.  \n\nNow generate the patient’s opening statement to the doctor."
+            },
+            {
+              "content": "="
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -672,
+        1232
+      ],
+      "id": "ee440c98-d42d-4039-a563-2cc9889df370",
+      "name": "generate_initial_chat",
+      "credentials": {
+        "openAiApi": {
+          "id": "NzxKiLIUR46RJIup",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.result.sample }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        1056
+      ],
+      "id": "f9a45380-9140-43b0-be50-bebe1df3f7ae",
+      "name": "Get Result1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Start FLUX Generation Job1').item.json.polling_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        1072
+      ],
+      "id": "77d82ee8-29de-49d0-bce6-cb813cda016b",
+      "name": "Do the Polling1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pEz6X7BGVMDOfIWk",
+          "name": "Header Auth account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d35ae158-063c-49e6-a13b-3c7fe086534f",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "=Ready",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        288,
+        1072
+      ],
+      "id": "30f7c636-0efb-4866-9e5f-8eb2bea01f3d",
+      "name": "Is it ready?1"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        1312
+      ],
+      "id": "8a8f699d-16b0-4af9-bfd0-7cbdc1a22807",
+      "name": "Wait1",
+      "webhookId": "91c72a89-0871-4cf3-9257-21c3fc80d117"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.bfl.ai/v1/flux-kontext-pro",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "x-key",
+              "value": "5a68bcb8-d057-49b6-9488-4885379f11c6"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $json.message.content }}"
+            },
+            {
+              "name": "aspect_ratio",
+              "value": "1:1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -176,
+        1072
+      ],
+      "id": "3ac83d62-9ab8-432d-b4cd-e18034a4002e",
+      "name": "Start FLUX Generation Job1"
+    },
+    {
+      "parameters": {
+        "content": "## Start a Black Forst Lab Job\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n^--- Here you can customize Parameters and Model",
+        "height": 432,
+        "width": 272
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -272,
+        960
+      ],
+      "typeVersion": 1,
+      "id": "33d976c7-7121-4f79-9026-b9818f599fb1",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## The Result comes Asynchronous\n\n\n\n\n\n\n\n\n\nYou can leave this block. we essentially are checking back every 1second if the image is done",
+        "height": 288,
+        "width": 352,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        96,
+        1216
+      ],
+      "typeVersion": 1,
+      "id": "b1ee903a-a2f9-4f1d-a7f2-f5d5798e9d7e",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Show the Image\n\n### Give the file back",
+        "height": 400,
+        "width": 624
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        800,
+        944
+      ],
+      "typeVersion": 1,
+      "id": "61d159c3-da65-4095-9183-28069dbf4ff0",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "returnBinary",
+        "completionTitle": "Image Result",
+        "completionMessage": "=<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n  <title>Generated Image — Result</title>\n  <style>\n    body {\n      margin: 0;\n      min-height: 100vh;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      background: radial-gradient(circle at top left, #3f5efb33, transparent),\n                  radial-gradient(circle at bottom right, #833ab433, transparent),\n                  linear-gradient(180deg, #0f1724, #07152a);\n      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    }\n\n    .frame {\n      max-width: 90vw;\n      max-height: 90vh;\n      border-radius: 20px;\n      overflow: hidden;\n      box-shadow: 0 20px 40px rgba(0,0,0,0.6);\n      background: rgba(255,255,255,0.02);\n      border: 1px solid rgba(255,255,255,0.08);\n      backdrop-filter: blur(8px) saturate(120%);\n      transition: transform .3s ease, box-shadow .3s ease;\n    }\n\n    .frame:hover {\n      transform: scale(1.01) translateY(-6px);\n      box-shadow: 0 28px 60px rgba(0,0,0,0.7);\n    }\n\n    img {\n      display: block;\n      max-width: 100%;\n      max-height: 100%;\n      object-fit: contain;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"frame\">\n    <img src=\"data:image/{{ $binary['data'].fileExtension }};base64,{{ $json.data }}\" alt=\"Generated result\" />\n(should also be downloaded if you don't see anything)\n  </div> ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        1264,
+        1136
+      ],
+      "id": "03657459-2633-4145-a21c-789fac671847",
+      "name": "Get File as Result1",
+      "webhookId": "5950f1c1-d974-4ce9-b0c3-4cced46159ae"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        864,
+        1056
+      ],
+      "id": "9bc3a892-3cb1-4893-b236-b5a95dbd3c17",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1072,
+        1136
+      ],
+      "id": "a5ed20e6-6ae9-4d76-aea2-78ec05ff49c2",
+      "name": "Image as String + All other data1"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "hack-doctor-fr",
+        "fileName": "initial_image.png",
+        "additionalFields": {
+          "acl": "publicRead"
+        }
+      },
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 2,
+      "position": [
+        704,
+        1392
+      ],
+      "id": "696f2cf9-9957-4a5f-a7ea-9a05eeb52134",
+      "name": "Upload a file",
+      "credentials": {
+        "aws": {
+          "id": "GBh6f24VhUXBb7Wi",
+          "name": "AWS account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are roleplaying as the **patient** in a doctor’s office.  \nYou do **not** know your condition or diagnosis.  \nYou will reply to the doctor’s most recent questions using natural, everyday language.\n\nContext you can rely on:\n- Patient’s symptoms (what you’ve been experiencing): {{ $json.data }}\n- Doctor’s recent chat history and questions: {{ $json.body }}\n\nGuidelines:\n- Speak naturally, like a person talking to their doctor.  \n- Respond directly to what the doctor asked; answer briefly and clearly.  \n- Do not mention or guess any disease name.  \n- If you don’t know or didn’t notice something, say so briefly.  \n- Keep it short: 2–4 sentences.  \n- Do not write the doctor’s response.\n\nNow generate the patient’s reply to the doctor’s latest questions.\n"
+            },
+            {
+              "content": "="
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -144,
+        1968
+      ],
+      "id": "981be8fd-5c28-49dc-8da3-ff6b2bd10a6a",
+      "name": "generate_followup_chat",
+      "credentials": {
+        "openAiApi": {
+          "id": "NzxKiLIUR46RJIup",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -320,
+        1936
+      ],
+      "id": "754bb771-2746-4982-8ecb-fe9e58dcef8f",
+      "name": "chat_history + Doctor question",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "/start_sim",
+        "responseMode": "lastNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1648,
+        640
+      ],
+      "id": "8d6f9b61-e437-4629-9aa8-8dad9d8c4211",
+      "name": "Webhook",
+      "webhookId": "5954c1ea-574e-4e9a-a000-10ec7f394143",
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "/start_sim",
+        "responseMode": "lastNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1696,
+        1968
+      ],
+      "id": "b946feee-bde1-474c-a54a-d816cf4c78ba",
+      "name": "Webhook_followup",
+      "webhookId": "5954c1ea-574e-4e9a-a000-10ec7f394143",
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "bucketName": "hack-doctor-fr",
+        "fileKey": "symptoms.txt"
+      },
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        1760
+      ],
+      "id": "38ed1ffc-1535-4194-a5a9-7caf000cb5b4",
+      "name": "Download a file",
+      "credentials": {
+        "aws": {
+          "id": "GBh6f24VhUXBb7Wi",
+          "name": "AWS account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        1760
+      ],
+      "id": "f2f30ddb-e449-4fdd-983e-6f23b874c81a",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all().map((item) => item.json);\nreturn data;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        1760
+      ],
+      "id": "842e2409-76df-4e53-9037-af1e151d88c3",
+      "name": "get_data"
+    },
+    {
+      "parameters": {
+        "content": "# Step 2 : FollowUp Chat with patient\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+        "height": 832,
+        "width": 1920,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1536,
+        1568
+      ],
+      "typeVersion": 1,
+      "id": "fec2f143-56b4-42aa-8eb7-02a24d3f44a5",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Step 1 : init scenario\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+        "height": 832,
+        "width": 1920,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1504,
+        560
+      ],
+      "typeVersion": 1,
+      "id": "6a5135c4-fb49-4d0d-b646-2de74d534dd7",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Step 3: The doctor does an action\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+        "height": 832,
+        "width": 1920,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1552,
+        2528
+      ],
+      "typeVersion": 1,
+      "id": "8f9941af-b67d-4b9b-8f04-774cda18c1a7",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Load the History symptoms as Context",
+        "height": 256,
+        "width": 480
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1104,
+        1648
+      ],
+      "typeVersion": 1,
+      "id": "59553de8-b4bd-4185-9d58-ab11d49a74d9",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-NANO"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are playing the role of a patient in a role playing game where the patient walks into the doctor's office. The doctor is trying to guess the disease the patient has. The patient had the following symptoms\n<symptoms>\n\"{{ $(\"Download a file1\").item.binary.symptomps }}\"\n</symptoms>\nThe doctor wants to \"{{ $json.body.action }}\". Write a prompt for an image generation model to show the doctor the result."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -1216,
+        2832
+      ],
+      "id": "8cb031b8-3c4d-4943-993b-c5bc3cca6052",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "4kVtZYPL1hgbgLvz",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## The Result comes Asynchronous\n\n\n\n\n\n\n\n\n\nYou can leave this block. we essentially are checking back every 1second if the image is done",
+        "height": 288,
+        "width": 352,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -528,
+        2960
+      ],
+      "typeVersion": 1,
+      "id": "59fdffd9-494a-4cb6-bc62-b918d784345a",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"url\": \"http://hack-doctor-fr.s3-website.eu-central-1.amazonaws.com/after-action.png\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        336,
+        2800
+      ],
+      "id": "3bbc8b8a-722f-4711-b26d-afaa4afe48e4",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "httpMethod": [
+          "POST"
+        ],
+        "path": "do_actionsssss",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1632,
+        2832
+      ],
+      "id": "c13a8bef-eeb0-4aa6-bdaa-95894bab4049",
+      "name": "Webhook1",
+      "webhookId": "ccee793e-6381-4c4e-8495-fb9a3d9951dd",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "bucketName": "hack-doctor-fr",
+        "fileKey": "symptoms",
+        "binaryPropertyName": "symptomps"
+      },
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 2,
+      "position": [
+        -1424,
+        2832
+      ],
+      "id": "eca290f9-5de1-40e2-bdc9-f54f0c36bbd6",
+      "name": "Download a file1",
+      "credentials": {
+        "aws": {
+          "id": "7LW7L7lJGb9RjDIN",
+          "name": "AWS account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.result.sample }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        2800
+      ],
+      "id": "363d2cc8-ae35-40f6-96ed-024ffb39751e",
+      "name": "Get Result"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Start FLUX Generation Job').item.json.polling_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -544,
+        2816
+      ],
+      "id": "02627f77-25ba-4197-983f-720898c6a8d2",
+      "name": "Do the Polling",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2RNpkeNC9BNFxpoR",
+          "name": "Header Auth account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d35ae158-063c-49e6-a13b-3c7fe086534f",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "=Ready",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -336,
+        2816
+      ],
+      "id": "5b78b42b-4d6d-42f0-96f5-afccbc891561",
+      "name": "Is it ready?"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        3056
+      ],
+      "id": "0f507b4f-27bd-45b2-b173-1ae288780623",
+      "name": "Wait",
+      "webhookId": "91c72a89-0871-4cf3-9257-21c3fc80d117"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.bfl.ai/v1/flux-kontext-pro",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "x-key",
+              "value": "5d088b26-0d80-4d5b-85ca-b66c029ed594"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $json.message.content }}"
+            },
+            {
+              "name": "aspect_ratio",
+              "value": "1:1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -816,
+        2832
+      ],
+      "id": "25a27200-7ed8-41f4-bb89-c79d218c28ce",
+      "name": "Start FLUX Generation Job"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "hack-doctor-fr",
+        "fileName": "after-action.png",
+        "additionalFields": {
+          "acl": "publicRead",
+          "grantFullControl": false,
+          "grantRead": true
+        }
+      },
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 2,
+      "position": [
+        128,
+        2800
+      ],
+      "id": "6c5bad3a-8f32-4ac9-8af4-3db1104a2af0",
+      "name": "Upload a file1",
+      "credentials": {
+        "aws": {
+          "id": "7LW7L7lJGb9RjDIN",
+          "name": "AWS account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "get rows": {
+      "main": [
+        [
+          {
+            "node": "get_random_disease",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_random_disease": {
+      "main": [
+        [
+          {
+            "node": "generate symptoms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate symptoms": {
+      "main": [
+        [
+          {
+            "node": "save the symptoms",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "generate initial image prompt",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "generate_initial_chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save the symptoms": {
+      "main": [
+        []
+      ]
+    },
+    "Do the Polling1": {
+      "main": [
+        [
+          {
+            "node": "Is it ready?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is it ready?1": {
+      "main": [
+        [
+          {
+            "node": "Get Result1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Do the Polling1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start FLUX Generation Job1": {
+      "main": [
+        [
+          {
+            "node": "Do the Polling1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_initial_chat": {
+      "main": [
+        []
+      ]
+    },
+    "generate initial image prompt": {
+      "main": [
+        [
+          {
+            "node": "Start FLUX Generation Job1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Image as String + All other data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image as String + All other data1": {
+      "main": [
+        [
+          {
+            "node": "Get File as Result1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Result1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Image as String + All other data1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat_history + Doctor question": {
+      "main": [
+        [
+          {
+            "node": "generate_followup_chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "get rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_followup": {
+      "main": [
+        [
+          {
+            "node": "chat_history + Doctor question",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "get_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_data": {
+      "main": [
+        [
+          {
+            "node": "chat_history + Doctor question",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Start FLUX Generation Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Download a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Result": {
+      "main": [
+        [
+          {
+            "node": "Upload a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Do the Polling": {
+      "main": [
+        [
+          {
+            "node": "Is it ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is it ready?": {
+      "main": [
+        [
+          {
+            "node": "Get Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Do the Polling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start FLUX Generation Job": {
+      "main": [
+        [
+          {
+            "node": "Do the Polling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "fba40a64-e63f-45fa-8e11-81b74b590591",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d7422f1c6ec29279cec4b4c98e057157574fade45f1651f4d4ef418857d0edb7"
+  },
+  "id": "hgSckRgzTyON7RWN",
+  "tags": []
+}
