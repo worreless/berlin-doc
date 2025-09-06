@@ -51,9 +51,6 @@ const BodyMap = ({ onSelectBodyPart }: BodyMapProps) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 font-sans">
       <div className="bg-white rounded-xl shadow-2xl p-8 max-w-lg w-full text-center">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-6">
-            Body Part Selector
-        </h1>
 
         {!selectedPart && (
             <div className="flex justify-center items-center mb-6">
